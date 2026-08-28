@@ -3,6 +3,8 @@
 *.csv.gz
 datasets/
 exp/
+kaggle/
+kaggle.json
 
 
 
