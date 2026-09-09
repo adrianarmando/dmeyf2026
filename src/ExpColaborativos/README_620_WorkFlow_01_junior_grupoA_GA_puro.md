@@ -67,6 +67,7 @@ flowchart TD
 | **Evaluación de Fitness** | N/A | LightGBM univariado local (50k sample) | **LightGBM univariado local (50k sample)** |
 | **Automatización Multi-Semilla** | Manual (1 sola semilla) | Bucle multi-semilla modularizado | **Bucle multi-semilla modularizado** |
 | **Ensamble Blending** | No disponible | Promedio de probabilidades multi-semilla | **Promedio de probabilidades multi-semilla** |
+| **Blindaje Anti-Leakage** | N/A (Sin GA previo) | Vulnerable (riesgo clase01_delta1) | **Blindaje Defensivo en 3 Capas (Aislamiento volátil + exclusión lags + regex)** |
 
 ---
 
@@ -77,14 +78,14 @@ El algoritmo extrae automáticamente las variables numéricas originales del ban
 1. Excluye identificadores, metadatos y target: `numero_de_cliente`, `foto_mes`, `clase_ternaria`, `clase01`, `azar`.
 2. Filtra únicamente columnas con tipo `is.numeric`.
 3. Excluye variables de fechas (prefijos o sufijos `fecha`, `_f`).
-4. Si la cantidad de variables supera `MAX_TERMINALES = 40`, realiza un muestreo pseudo-aleatorio reproducible usando `PARAM$semilla_primigenia`.
+4. Si la cantidad de variables supera `MAX_TERMINALES = 60` (fijado en 60 para forzar el uso de la totalidad de las 54 variables numéricas crudas del dataset), realiza un muestreo pseudo-aleatorio reproducible usando `PARAM$semilla_primigenia`.
 
 ### 4.2 Gramática Formal BNF (Backus-Naur Form)
 Se define una gramática contextual que asegura expresiones sintácticamente válidas en R:
 ```text
 <expr> ::= <op>
 <op>   ::= <op> + <op> | <op> - <op> | <op> * <op> | protected_div(<op>, <op>) | protected_log_diff(<op>, <op>) | <var>
-<var>  ::= col_1 | col_2 | ... | col_40
+<var>  ::= col_1 | col_2 | ... | col_54
 ```
 
 ### 4.3 Operadores Aritméticos Protegidos
@@ -105,7 +106,7 @@ protected_log_diff <- function(x, y) {
 
 ### 4.4 Función de Aptitud (Fitness) Eficiente
 1. **Split Local Temporal:** Para evitar contaminación (*data leakage*), el algoritmo evalúa la aptitud exclusivamente en meses anteriores a `202107` (el mes de validación oficial del workflow). Se toman los últimos 3 meses históricos disponibles como validación local (`idx_val_GA`) y los meses precedentes como entrenamiento local (`idx_tr_GA`).
-2. **Subsampling de Alto Rendimiento:** Se limita la evaluación de aptitud a una muestra estratificada de hasta $50.000$ filas de entrenamiento y $25.000$ de validación. Esto reduce el tiempo por individuo a **~5 milisegundos**, permitiendo que una población de $100$ individuos a lo largo de $30$ generaciones concluya en **~1 a 2 minutos**.
+2. **Subsampling de Alto Rendimiento:** Se limita la evaluación de aptitud a una muestra estratificada de hasta $50.000$ filas de entrenamiento y $25.000$ de validación. Esto reduce el tiempo por individuo a **~5 milisegundos**, permitiendo que una población de $150$ individuos a lo largo de $50$ generaciones concluya en **~2 a 4 minutos**.
 3. **Métrica de Costo:**
    $$\text{Fitness Cost} = 1 - \text{AUC}_{\text{LightGBM Univariado}}$$
    (donde menor costo indica mejor capacidad predictiva univariada).
@@ -120,21 +121,89 @@ Al concluir las generaciones evolutivas:
   ```
 * Se inyectan en `dataset` las mejores 5 fórmulas únicas: `GA_Feature_1`, `GA_Feature_2`, `GA_Feature_3`, `GA_Feature_4` y `GA_Feature_5`.
 
+### 4.6 Presión Selectiva Evolutiva Aumentada (Elitismo y Diversidad)
+Para forzar a la descendencia a superar el rendimiento de las mejores soluciones y evitar la pérdida de avances genéticos:
+* **Elitismo al 50% (`elitism = as.integer(PARAM$GA$popSize * 0.50)`):** Preserva el 50% superior de la población entre generaciones, obligando a los nuevos individuos recombinados a desbancar a los progenitores de élite para progresar.
+* **Tasa de Mutación (`mutationChance = 0.15`):** Introduce una probabilidad del 15% de mutación por codón/individuo, promoviendo diversidad genética y evitando el estancamiento en óptimos locales.
+
+### 4.7 Trazabilidad Completa de Variables Descubiertas (CSV)
+Durante la fase de inyección de variables, se registra de forma rigurosa la procedencia de cada feature sintética:
+* Se inicializa una tabla estructurada: `dt_trazabilidad <- data.table(Variable=character(), AUC=numeric(), Formula=character())`.
+* Tras inyectar cada variable válida a `dataset`, se asienta el registro con `dt_trazabilidad <- rbind(dt_trazabilidad, list(nombre_col, scores_finales[i], formulas_finales[i]))`.
+* Al finalizar el bucle, se exporta a disco con `fwrite(dt_trazabilidad, file = file.path(dir_experimento_base, paste0("GA_trazabilidad_formulas_s", PARAM$semilla_primigenia, ".csv")), sep = ",")`.
+
+### 4.8 Blindaje Anti-Leakage (Protección Estricta del Target Temporal)
+
+Durante la inspección técnica profunda de versiones experimentales preliminares (`v2`), se detectó un grave efecto colateral inadvertido:
+* Para computar el fitness en el Algoritmo Genético, se creaba prematuramente la columna `clase01` en `dataset`.
+* Al no ser eliminada antes del paso de Feature Engineering Histórico (`FEhist`), el motor generaba deltas temporales del target: `clase01_delta1 = clase01[t] - clase01_lag1[t-1]`.
+* Como casi la totalidad de clientes que causan baja en $t$ estaban activos en $t-1$ (`clase01_lag1 = 0`), `clase01_delta1` reproducía con precisión perfecta el target actual (`1 - 0 = 1` para BAJA; `0 - 0 = 0` para CONTINUA).
+* LightGBM aprendió a usar esta variable filtrada durante el Grid Search, alcanzando un **AUC artificial de 0.999998 (Data Leakage total)**, provocando predicciones vacías o erróneas en Kaggle (`202109`, donde no hay target).
+
+En este script de producción se implementa un **blindaje defensivo en 3 capas**:
+1. **Aislamiento Volátil del Target en GA:** El fitness ya no inyecta `clase01` en `dataset`. Computa los vectores de evaluación directamente en memoria volátil:
+   ```r
+   y_tr_GA  <- ifelse(dataset$clase_ternaria[idx_tr_GA] %in% c("BAJA+1", "BAJA+2"), 1L, 0L)
+   y_val_GA <- ifelse(dataset$clase_ternaria[idx_val_GA] %in% c("BAJA+1", "BAJA+2"), 1L, 0L)
+   ```
+   Y al finalizar la celda se aplica la remoción explícita preventiva:
+   ```r
+   if ("clase01" %in% colnames(dataset)) dataset[, clase01 := NULL]
+   ```
+2. **Blindaje en `cols_lagueables` (FEhist):** Se añade explícitamente `clase01` a las variables excluidas de retardos temporales:
+   ```r
+   cols_lagueables <- copy(setdiff(
+       colnames(dataset),
+       c("numero_de_cliente", "foto_mes", "clase_ternaria", "clase01", "azar")
+   ))
+   ```
+3. **Filtro Regex Defensivo en `campos_buenos` (Modelado):** Se excluye cualquier predictor que comience con `"clase"` antes de ingresar a LightGBM:
+   ```r
+   campos_buenos <- copy(setdiff(
+       colnames(dataset), c("clase_ternaria", "clase01", "azar", "fold_train", "fold_final_train")
+   ))
+   campos_buenos <- campos_buenos[!grepl("^clase", campos_buenos)]
+   ```
+
 ---
 
 ## 5. Parámetros de Configuración (`PARAM$GA`)
 
-En la Celda 11 del notebook se parametrizan todas las dimensiones del algoritmo genético:
+En la Celda 11 del notebook se parametrizan todas las dimensiones del algoritmo genético para abarcar la totalidad de variables y elevar la presión evolutiva:
 
 ```r
 PARAM$GA <- list(
-  popSize = 100,            # Tamaño de la población de individuos
-  iterations = 30,          # Cantidad de generaciones evolutivas
+  popSize = 150,            # Tamaño de la población de individuos
+  iterations = 50,          # Cantidad de generaciones evolutivas
   top_features = 5,         # Cantidad de mejores features no lineales a inyectar
-  max_terminales = 40,      # Máximo de variables numéricas base a combinar
-  seqLen = 200,             # Longitud máxima de codones del genoma
+  max_terminales = 60,      # Forzar a usar todas las variables (54 variables crudas)
+  seqLen = 250,             # Longitud máxima de codones del genoma
   max.depth = 10,           # Profundidad máxima del árbol sintáctico BNF
   max_filas_fitness = 50000 # Subsampling para evaluación de fitness ultrarrápida
+)
+```
+
+### 5.1 Bloque de Ejecución GrammaticalEvolution
+```r
+ge_res <- GrammaticalEvolution(
+  grammarDef      = bnf_grammar,
+  evalFunc        = fitness_gramEvol,
+  popSize         = PARAM$GA$popSize,
+  iterations      = PARAM$GA$iterations,
+  terminationCost = 0.10,
+  seqLen          = PARAM$GA$seqLen,
+  max.depth       = PARAM$GA$max.depth,
+  
+  # Nuevos parámetros de presión selectiva
+  elitism         = as.integer(PARAM$GA$popSize * 0.50),
+  mutationChance  = 0.15,
+  
+  monitorFunc     = function(result) {
+    cat(sprintf("Gen %2d | Mejor Costo: %.5f (AUC: %.5f)\n",
+                result$population$currentIteration,
+                result$best$cost,
+                1 - result$best$cost))
+  }
 )
 ```
 
@@ -147,6 +216,7 @@ PARAM$GA <- list(
 ```text
 /content/buckets/b1/exp/WF9101/
 │
+├── GA_trazabilidad_formulas_s115879.csv    <-- Trazabilidad de variables, AUC y fórmulas genéticas
 ├── semilla_115879/
 │   ├── tb_grid_search_01.txt       <-- Grid search con features puras de GA
 │   ├── modelo.txt                  <-- Modelo LightGBM serializado

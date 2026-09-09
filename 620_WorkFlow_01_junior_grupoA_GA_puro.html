@@ -357,6 +357,7 @@
                 <a href="#matriz-comparativa" class="nav-link">2. Matriz Tripartita</a>
                 <a href="#ga-puro" class="nav-link">3. Algoritmo Genético Puro</a>
                 <a href="#gramatica-bnf" class="nav-link">4. Gramática BNF y Fitness</a>
+                <a href="#blindaje-anti-leakage" class="nav-link" style="color: var(--accent-success);">🛡️ 4.1 Blindaje Anti-Leakage</a>
                 <a href="#configuracion" class="nav-link">5. Configuración PARAM$GA</a>
                 <a href="#motor-multi-semilla" class="nav-link">6. Motor Multi-Semilla (WF9101)</a>
                 <a href="#subidas-kaggle" class="nav-link">7. Subidas a Kaggle (100/Día)</a>
@@ -493,8 +494,8 @@ candidatas_GA &lt;- candidatas_GA[son_numericas]
 patron_fechas &lt;- "^(f|.*_f|.*fecha)"
 candidatas_GA &lt;- candidatas_GA[!grepl(patron_fechas, candidatas_GA, ignore.case = TRUE)]
 
-# Control del espacio de búsqueda (máx 40 terminales)
-MAX_TERMINALES &lt;- 40
+# Control del espacio de búsqueda (máx 60 terminales para forzar todas las variables)
+MAX_TERMINALES &lt;- 60
 if (length(candidatas_GA) > MAX_TERMINALES) {
   set.seed(PARAM$semilla_primigenia)
   candidatas_GA &lt;- sample(candidatas_GA, MAX_TERMINALES)
@@ -571,21 +572,102 @@ protected_log_diff &lt;- function(x, y) {
             </div>
         </section>
 
-        <!-- Section 5: Configuracion -->
+                    <div class="card" id="blindaje-anti-leakage" style="border-left: 4px solid var(--accent-success); margin-top: 1.5rem;">
+                <h3 style="color: var(--accent-success); margin-bottom: 0.5rem;">🛡️ 4.8 Blindaje Defensivo Anti-Leakage en 3 Capas</h3>
+                <p style="font-size: 0.88rem; margin-bottom: 0.75rem;">
+                    <strong>Detección y Corrección de Falla Crítica:</strong> En versiones preliminares experimentales (<code>v2</code>), la creación prematura de <code>clase01</code> en <code>dataset</code> provocaba que en <code>FEhist</code> se generase <code>clase01_delta1 = clase01[t] - clase01_lag1[t-1]</code>. Al entrar en <code>campos_buenos</code>, LightGBM memorizaba el target actual alcanzando un <strong>AUC artificial de 0.999998 (Data Leakage total)</strong>, colapsando luego en Kaggle (mes 202109).
+                </p>
+                <p style="font-size: 0.88rem; margin-bottom: 0.5rem;">
+                    Esta versión implementa una arquitectura defensiva en 3 niveles:
+                </p>
+                <ul style="font-size: 0.85rem; padding-left: 1.25rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                    <li><strong>1. Aislamiento Volátil del Target en GA:</strong> Las etiquetas de fitness se computan en vectores temporales en memoria (<code>y_tr_GA</code> y <code>y_val_GA</code>) sin inyectar <code>clase01</code> en <code>dataset</code>, con verificación explícita de remoción.</li>
+                    <li><strong>2. Protección en FE Histórico:</strong> Se añade <code>clase01</code> a la lista de exclusiones de <code>cols_lagueables</code> para impedir que sea lagueada bajo cualquier circunstancia.</li>
+                    <li><strong>3. Filtro Regex en Modelado:</strong> <code>campos_buenos &lt;- campos_buenos[!grepl("^clase", campos_buenos)]</code> elimina cualquier predictor residual relacionado con el target antes de entrenar LightGBM.</li>
+                </ul>
+                <pre><code># Capa 1: Target volátil en GA (sin inyectar en dataset)
+y_tr_GA  &lt;- ifelse(dataset$clase_ternaria[idx_tr_GA] %in% c("BAJA+1", "BAJA+2"), 1L, 0L)
+y_val_GA &lt;- ifelse(dataset$clase_ternaria[idx_val_GA] %in% c("BAJA+1", "BAJA+2"), 1L, 0L)
+if ("clase01" %in% colnames(dataset)) dataset[, clase01 := NULL]
+
+# Capa 2: Protección estricta en FEhist
+cols_lagueables &lt;- copy(setdiff(colnames(dataset), c("numero_de_cliente", "foto_mes", "clase_ternaria", "clase01", "azar")))
+
+# Capa 3: Filtro regex definitivo en modelado
+campos_buenos &lt;- campos_buenos[!grepl("^clase", campos_buenos)]</code></pre>
+            </div>
+
+        <!-- Section 5: Configuracion y Presión Selectiva -->
         <section id="configuracion">
-            <h2 class="section-heading">5. Parámetros de Control (PARAM$GA)</h2>
+            <h2 class="section-heading">5. Parámetros de Control (PARAM$GA), Presión Selectiva y Trazabilidad</h2>
             <p>
-                Configurados en la Celda 11 del notebook para equilibrar exhaustividad de búsqueda y velocidad de ejecución:
+                Configurados en la Celda 11 del notebook para abarcar la totalidad de variables del dataset (54 columnas numéricas), elevar la presión selectiva evolutiva y registrar la trazabilidad:
             </p>
             <pre><code>PARAM$GA &lt;- list(
-  popSize = 100,            # Tamaño de la población de individuos
-  iterations = 30,          # Cantidad de generaciones evolutivas
+  popSize = 150,            # Tamaño de la población de individuos
+  iterations = 50,          # Cantidad de generaciones evolutivas
   top_features = 5,         # Cantidad de mejores features no lineales a inyectar
-  max_terminales = 40,      # Máximo de variables numéricas base a combinar
-  seqLen = 200,             # Longitud máxima de codones del genoma
+  max_terminales = 60,      # Forzar a usar todas las variables (54 numéricas)
+  seqLen = 250,             # Longitud máxima de codones del genoma
   max.depth = 10,           # Profundidad máxima del árbol sintáctico BNF
   max_filas_fitness = 50000 # Subsampling para evaluación de fitness ultrarrápida
 )</code></pre>
+
+            <div class="grid-2" style="margin-top: 1.5rem;">
+                <div class="card" style="border-top: 3px solid var(--accent-secondary);">
+                    <h3 style="color: var(--accent-secondary); margin-bottom: 0.5rem;">Presión Selectiva Aumentada (Elitismo y Mutación)</h3>
+                    <p style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+                        Se implementa un 50% de elitismo estricto para preservar la mitad superior de la población e impedir regresiones evolutivas, combinado con 15% de mutación para sostener la diversidad genética:
+                    </p>
+                    <pre><code>ge_res &lt;- GrammaticalEvolution(
+  grammarDef      = bnf_grammar,
+  evalFunc        = fitness_gramEvol,
+  popSize         = PARAM$GA$popSize,
+  iterations      = PARAM$GA$iterations,
+  terminationCost = 0.10,
+  seqLen          = PARAM$GA$seqLen,
+  max.depth       = PARAM$GA$max.depth,
+  
+  # Nuevos parámetros de presión selectiva
+  elitism         = as.integer(PARAM$GA$popSize * 0.50),
+  mutationChance  = 0.15,
+  
+  monitorFunc     = function(result) {
+    cat(sprintf("Gen %2d | Mejor Costo: %.5f (AUC: %.5f)\n",
+                result$population$currentIteration,
+                result$best$cost,
+                1 - result$best$cost))
+  }
+)</code></pre>
+                </div>
+
+                <div class="card" style="border-top: 3px solid var(--accent-success);">
+                    <h3 style="color: var(--accent-success); margin-bottom: 0.5rem;">Trazabilidad de Variables Descubiertas (CSV)</h3>
+                    <p style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+                        Registro estructurado de variables inyectadas, scores AUC univariados y expresiones matemáticas completas exportadas a la raíz del experimento:
+                    </p>
+                    <pre><code># Inicialización antes del bucle
+dt_trazabilidad &lt;- data.table(
+  Variable = character(),
+  AUC = numeric(),
+  Formula = character()
+)
+
+# Registro dentro del bucle de inyección
+dt_trazabilidad &lt;- rbind(
+  dt_trazabilidad,
+  list(nombre_col, scores_finales[i], formulas_finales[i])
+)
+
+# Exportación física al finalizar
+fwrite(
+  dt_trazabilidad,
+  file = file.path(dir_experimento_base,
+    paste0("GA_trazabilidad_formulas_s", PARAM$semilla_primigenia, ".csv")),
+  sep = ","
+)</code></pre>
+                </div>
+            </div>
         </section>
 
         <!-- Section 6: Motor Multi-Semilla -->
@@ -598,6 +680,7 @@ protected_log_diff &lt;- function(x, y) {
             <div class="tree-view">
 /content/buckets/b1/exp/<span class="tree-folder">WF9101/</span>
 │
+├── <span class="tree-file">GA_trazabilidad_formulas_s115879.csv</span>    <span class="tree-comment">&lt;-- Trazabilidad de variables, AUC y fórmulas</span>
 ├── <span class="tree-folder">semilla_115879/</span>                         <span class="tree-comment">&lt;-- Carpeta de semilla 1</span>
 │   ├── <span class="tree-file">tb_grid_search_01.txt</span>               <span class="tree-comment">&lt;-- Grilla de hiperparámetros con features GA</span>
 │   ├── <span class="tree-file">modelo.txt</span>                          <span class="tree-comment">&lt;-- Modelo entrenado con features puras</span>
