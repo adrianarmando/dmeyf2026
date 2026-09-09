@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Técnico Comparativo: Workflow 01 Junior vs v2 (Problema #10 - Grupo A)</title>
+    <style>
+        :root {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #273549;
+            --border-color: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #38bdf8;
+            --accent-secondary: #818cf8;
+            --accent-success: #34d399;
+            --accent-warning: #fbbf24;
+            --accent-danger: #f87171;
+            --code-bg: #090d16;
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            line-height: 1.65;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 310px;
+            background-color: #0b1120;
+            border-right: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 2rem 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.75rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .nav-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-header {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background-color: rgba(56, 189, 248, 0.1);
+        }
+
+        .nav-link.active {
+            color: var(--accent-primary);
+            background-color: rgba(56, 189, 248, 0.15);
+            font-weight: 600;
+        }
+
+        .nav-link.danger {
+            color: var(--accent-danger);
+        }
+        .nav-link.danger:hover {
+            background-color: rgba(248, 113, 113, 0.15);
+        }
+
+        /* Main Content Container */
+        .main-content {
+            flex: 1;
+            padding: 2.5rem 3.5rem;
+            max-width: 1260px;
+            overflow-x: hidden;
+        }
+
+        /* Hero / Header */
+        .hero {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 2rem;
+        }
+
+        .hero-tags {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.65rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            background-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .badge.cyan { background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .badge.purple { background-color: rgba(129, 140, 248, 0.15); color: #818cf8; border: 1px solid rgba(129, 140, 248, 0.3); }
+        .badge.emerald { background-color: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+        .badge.amber { background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+        .badge.rose { background-color: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+        h1.hero-title {
+            font-size: 2.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            margin-bottom: 0.75rem;
+            line-height: 1.25;
+        }
+
+        .hero-desc {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 950px;
+        }
+
+        /* Section Headings */
+        .section-heading {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 2.75rem 0 1.25rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .subsection-heading {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin: 1.75rem 0 0.85rem 0;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        /* Cards and Containers */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Stat Card */
+        .stat-card {
+            background: linear-gradient(145deg, #1e293b, #152033);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-primary);
+        }
+        .stat-card.purple::before { background: var(--accent-secondary); }
+        .stat-card.emerald::before { background: var(--accent-success); }
+        .stat-card.amber::before { background: var(--accent-warning); }
+        .stat-card.rose::before { background: var(--accent-danger); }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.35rem;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+            font-family: var(--font-mono);
+        }
+
+        .stat-sub {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin: 1.25rem 0;
+            background-color: var(--bg-card);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: #162032;
+            color: #e2e8f0;
+            font-weight: 600;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+            color: var(--text-secondary);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(56, 189, 248, 0.03);
+            color: var(--text-primary);
+        }
+
+        /* Code and Pre */
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.84rem;
+            color: #e2e8f0;
+            line-height: 1.55;
+            margin-bottom: 1rem;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: rgba(148, 163, 184, 0.15);
+            color: #38bdf8;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.86em;
+        }
+
+        /* Diff styling */
+        .diff-added {
+            background-color: rgba(52, 211, 153, 0.12);
+            color: #34d399;
+            display: block;
+            margin: 0 -1.2rem;
+            padding: 0.1rem 1.2rem;
+        }
+
+        .diff-removed {
+            background-color: rgba(248, 113, 113, 0.12);
+            color: #f87171;
+            display: block;
+            margin: 0 -1.2rem;
+            padding: 0.1rem 1.2rem;
+        }
+
+        /* Callouts */
+        .callout {
+            border-left: 4px solid var(--accent-primary);
+            background-color: rgba(56, 189, 248, 0.06);
+            padding: 1.15rem 1.35rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.35rem 0;
+        }
+
+        .callout.amber {
+            border-left-color: var(--accent-warning);
+            background-color: rgba(251, 191, 36, 0.06);
+        }
+
+        .callout.emerald {
+            border-left-color: var(--accent-success);
+            background-color: rgba(52, 211, 153, 0.06);
+        }
+
+        .callout.rose {
+            border-left-color: var(--accent-danger);
+            background-color: rgba(248, 113, 113, 0.07);
+        }
+
+        .callout-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        /* Search Box */
+        .search-box {
+            width: 100%;
+            padding: 0.65rem 0.95rem;
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent-primary);
+        }
+
+        /* Step visualizer */
+        .step-list {
+            list-style: none;
+            position: relative;
+            padding-left: 2rem;
+            margin: 1.25rem 0;
+        }
+
+        .step-list::before {
+            content: "";
+            position: absolute;
+            left: 0.65rem;
+            top: 0.5rem;
+            bottom: 0.5rem;
+            width: 2px;
+            background-color: var(--border-color);
+        }
+
+        .step-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-bullet {
+            position: absolute;
+            left: -2rem;
+            top: 0.15rem;
+            width: 1.35rem;
+            height: 1.35rem;
+            border-radius: 50%;
+            background-color: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .step-title {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Architecture box */
+        .arch-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .arch-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .arch-node {
+            background-color: #162032;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .arch-node-title {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--accent-primary);
+            margin-bottom: 0.35rem;
+        }
+
+        .arch-node-body {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Scroll smooth */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 960px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; }
+            .main-content { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span>🧬 DMeyF 2026</span>
+        </div>
+        <div class="sidebar-subtitle">Workflow Grupo A • Analista Jr</div>
+
+        <nav>
+            <div class="nav-group">
+                <div class="nav-header">Navegación del Reporte</div>
+                <a href="#resumen" class="nav-link active">1. Resumen Ejecutivo</a>
+                <a href="#matriz-comparativa" class="nav-link">2. Matriz Comparativa (v01 vs v2)</a>
+                <a href="#parametros-semillas" class="nav-link">3. Parámetros y Experimento</a>
+                <a href="#problema-10-ga" class="nav-link">4. Problema #10: Grammatical Evolution</a>
+                <a href="#bnf-espacio-busqueda" class="nav-link">5. Gramática BNF y 40 Variables</a>
+                <a href="#fitness-univariado" class="nav-link">6. Función Fitness (LightGBM Univ.)</a>
+                <a href="#target-leakage" class="nav-link danger">7. ⚠️ Diagnóstico Crítico: Target Leakage</a>
+                <a href="#efectos-memoria" class="nav-link">8. Multiplicación de Features (348 cols)</a>
+                <a href="#grid-search" class="nav-link">9. Estado de Ejecución y Grid Search</a>
+                <a href="#plan-accion" class="nav-link">10. Recomendaciones y Solución</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-header">Archivos en ExpColaborativos</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); padding: 0 0.5rem;">
+                    <p style="margin-bottom: 0.4rem;">📂 <code>620_WorkFlow_01_junior_grupoA.ipynb</code> (Línea Base)</p>
+                    <p style="margin-bottom: 0.4rem;">📂 <code>620_WorkFlow_01_junior_grupoA-10_v2.ipynb</code> (v2 con GA)</p>
+                    <p style="margin-bottom: 0.4rem;">📄 <code>exp/WF9100/</code> (Salidas Línea Base)</p>
+                    <p style="margin-bottom: 0;">📄 <code>exp/WF9199/</code> (Salidas Objetivo v2)</p>
+                </div>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Hero Header -->
+        <header class="hero">
+            <div class="hero-tags">
+                <span class="badge purple">Grupo A</span>
+                <span class="badge cyan">Experimento WF9100 vs WF9199</span>
+                <span class="badge emerald">Evolución Gramatical (gramEvol)</span>
+                <span class="badge amber">Problema #10 FE Intra-Mes</span>
+                <span class="badge rose">Target Leakage Diagnosticado</span>
+            </div>
+            <h1 class="hero-title">Reporte Técnico Comparativo: Workflow 01 Junior vs v2 (Grupo A)</h1>
+            <p class="hero-desc">
+                Comparación sistemática y análisis técnico exhaustivo entre la plantilla base 
+                <code>620_WorkFlow_01_junior_grupoA.ipynb</code> y la versión extendida 
+                <code>620_WorkFlow_01_junior_grupoA-10_v2.ipynb</code>. Este informe detalla las modificaciones en parámetros,
+                la arquitectura de Feature Engineering mediante <strong>Algoritmos Genéticos (Grammatical Evolution)</strong>, 
+                la resolución de 3 bugs de implementación, la acumulación interactiva de features sintéticas en memoria y la 
+                identificación rigurosa de un <strong>Target Leakage crítico</strong> que disparó artificialmente el AUC a 0.999998.
+            </p>
+        </header>
+
+        <!-- Stat Cards Summary -->
+        <div class="grid-4">
+            <div class="stat-card">
+                <div class="stat-label">Celdas en v01 (Base)</div>
+                <div class="stat-value">98</div>
+                <div class="stat-sub">49 KB • Sin salidas grabadas</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-label">Celdas en v2 (Con GA)</div>
+                <div class="stat-value">105</div>
+                <div class="stat-sub">174 KB • +7 celdas insertadas</div>
+            </div>
+            <div class="stat-card emerald">
+                <div class="stat-label">Variables Base en GA</div>
+                <div class="stat-value">40</div>
+                <div class="stat-sub">Numéricas continuas y discretas</div>
+            </div>
+            <div class="stat-card rose">
+                <div class="stat-label">Columnas en dataset</div>
+                <div class="stat-value">348</div>
+                <div class="stat-sub">+75 cols (14 GA + lags/deltas)</div>
+            </div>
+        </div>
+
+        <!-- Section 1: Resumen Ejecutivo -->
+        <section id="resumen">
+            <h2 class="section-heading">1. Resumen Ejecutivo del Análisis</h2>
+            <p>
+                El archivo <code>620_WorkFlow_01_junior_grupoA-10_v2.ipynb</code> representa la materialización del <strong>Problema #10</strong> 
+                asignado al Grupo A dentro del marco colaborativo de la Maestría (DMeyF 2026): el desarrollo e integración de un mecanismo 
+                estocástico de <strong>Feature Engineering Intra-mes automatizado basado en Algoritmos Genéticos</strong>.
+            </p>
+            <p>
+                A nivel de estructura global, el pipeline conserva intactas todas las fases estándar del workflow de la cátedra: 
+                lectura de datos (<code>DT</code>), análisis de catástrofe e imputación (<code>CA</code>), corrección de Data Drifting por deflación 
+                e índices monetarios (<code>DR</code>), Feature Engineering histórico con lags y deltas (<code>FEhist</code>), partición temporal 
+                y Grid Search con LightGBM.
+            </p>
+
+            <div class="grid-2" style="margin-top: 1.5rem;">
+                <div class="card">
+                    <h3 style="color: var(--accent-primary); font-size: 1.1rem; margin-bottom: 0.6rem;">🔬 Las Incorporaciones Centrales en v2</h3>
+                    <ul style="padding-left: 1.25rem; font-size: 0.9rem; color: var(--text-secondary);">
+                        <li style="margin-bottom: 0.5rem;"><strong>Evolución Gramatical (gramEvol):</strong> Generación estocástica de expresiones algebraicas mediante una gramática formal en formato Backus-Naur (BNF).</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>LightGBM Univariado como Fitness:</strong> Función de evaluación rápida basada en el AUC de validación de un modelo de gradiente boosting entrenado sobre una única columna sintética.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Saneamiento de Bugs:</strong> Resolución explícita de 3 errores críticos presentes en scripts preliminares (doble mapeo gramatical, filtrado excesivo de NAs y evaluación errónea de genomas crudos).</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Paralelización Multinúcleo:</strong> Uso de <code>mclapply</code> para evaluar la población final y extraer las mejores variables sintéticas.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--accent-danger); font-size: 1.1rem; margin-bottom: 0.6rem;">⚠️ El Hallazgo Crítico Detectado</h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        La inspección técnica profunda de las salidas de ejecución de v2 reveló un <strong>grave efecto colateral inadvertido:</strong>
+                    </p>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0;">
+                        Para computar el fitness en la Celda 46, se creó prematuramente la columna <code>clase01</code> en el <code>dataset</code>. 
+                        Al no ser eliminada antes del paso de <code>FEhist</code> (Celda 56), el motor generó deltas temporales del target: 
+                        <code>clase01_delta1 = clase01 - clase01_lag1</code>. 
+                        LightGBM aprendió a usar esta variable filtrada durante el Grid Search, alcanzando un <strong>AUC artificial de 0.999998</strong> (Data Leakage total).
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Matriz Comparativa -->
+        <section id="matriz-comparativa">
+            <h2 class="section-heading">2. Matriz Comparativa Integral (v01 vs v2)</h2>
+            <p>
+                La siguiente matriz detalla de forma exhaustiva las diferencias celda por celda, parámetros, etapas metodológicas y resultados 
+                observados en ambos cuadernos de Jupyter:
+            </p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dimensión / Etapa</th>
+                            <th>620_WorkFlow_01_junior_grupoA.ipynb (Base)</th>
+                            <th>620_WorkFlow_01_junior_grupoA-10_v2.ipynb (v2)</th>
+                            <th>Impacto Técnico y Metodológico</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Estructura y Celdas</strong></td>
+                            <td>98 celdas totales (59 de código, 39 de markdown)</td>
+                            <td>105 celdas totales (64 de código, 41 de markdown)</td>
+                            <td>Inserción de 7 celdas continuas (44 a 50) dedicadas al Problema #10.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Identificador de Experimento</strong></td>
+                            <td><code>PARAM$experimento &lt;- 9100</code></td>
+                            <td><code>PARAM$experimento &lt;- 9199</code></td>
+                            <td>Independiza el directorio de persistencia a <code>exp/WF9199</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Semilla Primigenia</strong></td>
+                            <td><code>PARAM$semilla_primigenia &lt;- 115879</code></td>
+                            <td><code>PARAM$semilla_primigenia &lt;- 100313</code></td>
+                            <td>Cambio de la semilla base para reproducibilidad estocástica.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Feature Engineering Intra-mes</strong></td>
+                            <td>Manual básico: 2 variables fijas (<code>kmes</code>, <code>mpayroll / cliente_edad</code>)</td>
+                            <td><strong>Manual + Grammatical Evolution (gramEvol)</strong></td>
+                            <td>Descubrimiento algorítmico y estocástico de relaciones no lineales entre atributos bancarios.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Librerías Requeridas en FE</strong></td>
+                            <td><code>data.table</code></td>
+                            <td><code>gramEvol</code>, <code>lightgbm</code>, <code>data.table</code>, <code>parallel</code></td>
+                            <td>Incorpora paquetes para algoritmos genéticos y paralelización multi-core.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gramática Formal (BNF)</strong></td>
+                            <td>No implementada</td>
+                            <td>Gramática BNF de texto con operadores protegidos</td>
+                            <td>Permite generar árboles sintácticos de complejidad controlada (<code>max.depth = 10</code>).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Operadores Aritméticos</strong></td>
+                            <td>División simple manual</td>
+                            <td><code>+</code>, <code>-</code>, <code>*</code>, <code>protected_div</code>, <code>protected_log_diff</code></td>
+                            <td>Operaciones matemáticas seguras ante divisiones por cero y valores infinitos/NA.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Evaluación de Aptitud (Fitness)</strong></td>
+                            <td>N/A</td>
+                            <td>LightGBM univariado real sobre split local (27 meses train / 3 meses validación)</td>
+                            <td>Mide la capacidad discriminante univariada mediante AUC con parada temprana estricta.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Diagnóstico de Población y Depuración</strong></td>
+                            <td>Inexistente</td>
+                            <td>Celdas 48 y 49: Conteo de individuos y DEBUG nivel 2 con <code>str(result$best)</code></td>
+                            <td>Inspección de genomas, expresiones mapeadas y trayectorias de costo generacional.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Variables Sintéticas Agregadas</strong></td>
+                            <td>0 variables GA</td>
+                            <td>Hasta 14 variables <code>GA_Feature_1</code> a <code>GA_Feature_14</code> en memoria</td>
+                            <td>Columnas inyectadas directamente en el <code>dataset</code> principal.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Columnas tras FEhist</strong></td>
+                            <td><strong>273 columnas</strong> (54 lagueables &times; 4 lags/deltas + 57 base)</td>
+                            <td><strong>348 columnas</strong> (69 lagueables &times; 4 lags/deltas + 72 base)</td>
+                            <td>+75 columnas generadas debido a las variables GA y la filtración de <code>clase01</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Integridad de Validación (Data Leakage)</strong></td>
+                            <td><strong>Limpia:</strong> <code>clase01</code> se creaba recién en la Celda 65 (después de FEhist)</td>
+                            <td><strong style="color: var(--accent-danger);">Corrompida (Target Leakage):</strong> <code>clase01_delta1</code> entró al modelo</td>
+                            <td>Al crearse <code>clase01</code> en Celda 46, FEhist generó <code>clase01_delta1</code>, provocando un AUC irreal de 0.999998.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Estado del Grid Search</strong></td>
+                            <td>No ejecutado en el notebook limpio guardado</td>
+                            <td>Interrumpido tras 2 iteraciones de las 50 combinaciones programadas</td>
+                            <td>Se grabaron métricas de las combinaciones iniciales antes del corte de la sesión.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 3: Parámetros y Semillas -->
+        <section id="parametros-semillas">
+            <h2 class="section-heading">3. Parámetros, Experimento y Metadatos (Celda 11)</h2>
+            <p>
+                La primera alteración en el código entre ambas versiones ocurre en la Celda 11, donde se redefinen los metadatos de ejecución del experimento:
+            </p>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 0.5rem;">620_WorkFlow_01_junior_grupoA.ipynb (Celda 11)</h4>
+                    <pre><code>PARAM <- list()
+<span class="diff-removed">PARAM$semilla_primigenia <- 115879</span>
+
+<span class="diff-removed">PARAM$experimento <- 9100</span>
+PARAM$dataset <- "analistajr_competencia_2026.csv.gz"</code></pre>
+                    <p style="font-size: 0.85rem;">Configuración canónica del experimento base <code>WF9100</code> con semilla del grupo.</p>
+                </div>
+
+                <div class="card">
+                    <h4 style="color: var(--accent-success); margin-bottom: 0.5rem;">620_WorkFlow_01_junior_grupoA-10_v2.ipynb (Celda 11)</h4>
+                    <pre><code>PARAM <- list()
+<span class="diff-added">PARAM$semilla_primigenia <- 100313</span>
+
+<span class="diff-added">PARAM$experimento <- 9199</span>
+PARAM$dataset <- "analistajr_competencia_2026.csv.gz"</code></pre>
+                    <p style="font-size: 0.85rem;">Nueva semilla asignada <code>100313</code> y cambio de experimento a <code>9199</code> para aislar carpetas de salida en <code>exp/WF9199</code>.</p>
+                </div>
+            </div>
+
+            <div class="callout emerald">
+                <div class="callout-title">💡 Justificación de la Aislación del Experimento:</div>
+                <p style="margin-bottom: 0; font-size: 0.9rem;">
+                    El cambio de identificador de <code>9100</code> a <code>9199</code> es una excelente práctica de laboratorio: evita que los archivos generados en disco 
+                    (como <code>modelo.txt</code>, <code>impo.txt</code>, <code>prediccion.txt</code> y los envíos a Kaggle) sobrescriban los resultados de la línea base en 
+                    <code>exp/WF9100</code>, permitiendo comparaciones directas de ganancia y AUC.
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 4: El Gran Agregado: Problema #10 -->
+        <section id="problema-10-ga">
+            <h2 class="section-heading">4. El Gran Agregado: Problema #10 - Feature Engineering con Algoritmo Genético</h2>
+            <p>
+                Las celdas 44 a 50 constituyen el núcleo técnico de la versión <strong>v2</strong>. 
+                A continuación se desglosa el rol de cada una de las 7 celdas insertadas:
+            </p>
+
+            <div class="card">
+                <h3 style="color: #ffffff; margin-bottom: 1.25rem;">Flujo de las Celdas Insertadas (44 a 50)</h3>
+                <ol class="step-list">
+                    <li class="step-item">
+                        <div class="step-bullet">44</div>
+                        <div class="step-title">Delimitador de Apertura: <code>##### Inicio GA</code></div>
+                        <p style="font-size: 0.88rem;">Marca el inicio del bloque experimental del Problema #10 en el notebook.</p>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-bullet">45</div>
+                        <div class="step-title">Planteo del Problema y Justificación de Arquitectura (Markdown)</div>
+                        <p style="font-size: 0.88rem;">
+                            Establece la <strong>hipótesis experimental:</strong> <em>"Un algoritmo genético que vaya generando combinaciones de variables y descarte aquellas que no sean de utilidad debe ser mucho mejor que las variables manuales o de bibliografía"</em>.
+                            Propone una arquitectura conceptual de dos etapas: (1) <code>gramEvol</code> para generar candidatos, y (2) <code>GA</code> binario para seleccionar el subconjunto óptimo.
+                            Además, define el principio metodológico de <strong>no tocar el mes 202107</strong> para evitar contaminar la partición de validación del pipeline oficial.
+                        </p>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-bullet">46</div>
+                        <div class="step-title">Preparación del Entorno y Filtrado de Candidatas (Código)</div>
+                        <p style="font-size: 0.88rem;">
+                            Carga librerías especializadas (<code>gramEvol</code>, <code>parallel</code>, <code>lightgbm</code>, <code>data.table</code>), 
+                            crea la columna target binaria <code>clase01</code> y filtra las <strong>40 variables candidatas puramente numéricas</strong> del dataset, 
+                            excluyendo IDs, fechas y la variable de clase.
+                        </p>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-bullet">47</div>
+                        <div class="step-title">Ejecución Saneada de Grammatical Evolution (Código Principal, 7.8 KB)</div>
+                        <p style="font-size: 0.88rem;">
+                            Contiene la gramática BNF, los operadores aritméticos protegidos, la partición local de entrenamiento/validación, 
+                            la función de fitness basada en LightGBM univariado, la corrida de <code>GrammaticalEvolution()</code> y la extracción del 
+                            Top N de variables sintéticas con evaluación paralelizada mediante <code>mclapply</code>.
+                        </p>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-bullet">48</div>
+                        <div class="step-title">Auditoría Cuantitativa de la Población Final (Código)</div>
+                        <p style="font-size: 0.88rem;">
+                            Imprime estadísticas del pool final de soluciones: total de individuos, individuos con score positivo, soluciones no triviales 
+                            y expresiones no duplicadas.
+                        </p>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-bullet">49</div>
+                        <div class="step-title">Depuración Avanzada de Estructuras Internas: DEBUG Nivel 2 (Código)</div>
+                        <p style="font-size: 0.88rem;">
+                            Ejecuta una corrida corta de prueba (5 individuos, 3 iteraciones) con monitor de progreso para auditar las propiedades internas 
+                            del objeto devuelto por <code>gramEvol</code> (<code>result$best</code>, <code>result$population</code>, <code>evaluations</code> y <code>expressions</code>).
+                        </p>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-bullet">50</div>
+                        <div class="step-title">Delimitador de Cierre: <code>##### Fin GA</code></div>
+                        <p style="font-size: 0.88rem;">Cierra el bloque del Problema #10 y da paso a la visualización de columnas del dataset.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <!-- Resolution of 3 Bugs -->
+            <div class="subsection-heading">Saneamiento Metodológico: Los 3 Bugs Resueltos en la Celda 47</div>
+            <p>
+                Uno de los aspectos más valiosos del código incorporado en la versión <strong>v2</strong> es que documenta y resuelve explícitamente 
+                tres fallas lógicas complejas heredadas de intentos previos:
+            </p>
+
+            <div class="grid-3">
+                <div class="card">
+                    <h4 style="color: var(--accent-danger); font-size: 0.95rem; margin-bottom: 0.4rem;">Bug 1: Doble Mapeo Gramatical</h4>
+                    <p style="font-size: 0.85rem;">
+                        <strong>Error previo:</strong> La función de fitness llamaba a <code>GrammarMap(expr, ...)</code> dentro de <code>fitness_gramEvol</code>.
+                    </p>
+                    <p style="font-size: 0.83rem; color: var(--accent-success);">
+                        <strong>Corrección:</strong> <code>GrammaticalEvolution()</code> ya envía la expresión R completamente mapeada a la función evaluadora. Se eliminó la llamada redundante que generaba errores de conversión.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h4 style="color: var(--accent-danger); font-size: 0.95rem; margin-bottom: 0.4rem;">Bug 2: Descarte Hiperagresivo de NAs</h4>
+                    <p style="font-size: 0.85rem;">
+                        <strong>Error previo:</strong> La validación <code>any(!is.finite(valores))</code> descartaba cualquier fórmula que tuviera <em>un solo NA</em>.
+                    </p>
+                    <p style="font-size: 0.83rem; color: var(--accent-success);">
+                        <strong>Corrección:</strong> Esto borraba todas las variables de tarjeta Visa (que tienen NAs estructurales en clientes sin tarjeta). Ahora solo se descarta si <em>todos</em> los valores son inválidos o la varianza es nula.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h4 style="color: var(--accent-danger); font-size: 0.95rem; margin-bottom: 0.4rem;">Bug 3: Evaluación de Genoma Crudo</h4>
+                    <p style="font-size: 0.85rem;">
+                        <strong>Error previo:</strong> Al extraer el Top 5, se pasaba el vector de enteros del genoma (<code>poblacion_final[[i]]</code>) directamente al <code>eval()</code>.
+                    </p>
+                    <p style="font-size: 0.83rem; color: var(--accent-success);">
+                        <strong>Corrección:</strong> <code>eval()</code> sobre un vector de enteros no falla: entrenaba LightGBM con ruido aleatorio. Se creó <code>evaluar_genoma()</code> que mapea antes de evaluar.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: BNF y Espacio de Búsqueda -->
+        <section id="bnf-espacio-busqueda">
+            <h2 class="section-heading">5. Gramática Formal BNF y las 40 Variables Candidatas</h2>
+            <p>
+                A diferencia de los enfoques genéticos basados en strings simples o listas prefijadas, la versión <strong>v2</strong> implementa 
+                <strong>Evolución Gramatical</strong> mediante una gramática BNF (Backus-Naur Form) compilada en tiempo de ejecución:
+            </p>
+
+            <div class="card">
+                <h4 style="color: var(--accent-primary); margin-bottom: 0.5rem;">Definición de la Gramática BNF en R:</h4>
+                <pre><code><span class="diff-added">protected_div &lt;- function(x, y) {</span>
+<span class="diff-added">  res &lt;- x / y</span>
+<span class="diff-added">  res[is.na(res) | is.infinite(res)] &lt;- 0</span>
+<span class="diff-added">  res</span>
+<span class="diff-added">}</span>
+
+<span class="diff-added">protected_log_diff &lt;- function(x, y) {</span>
+<span class="diff-added">  res &lt;- log(abs(x - y) + 1)</span>
+<span class="diff-added">  res[is.na(res) | is.infinite(res)] &lt;- 0</span>
+<span class="diff-added">  res</span>
+<span class="diff-added">}</span>
+
+<span class="diff-added">string_vars &lt;- paste(candidatas_GA, collapse = " | ")</span>
+<span class="diff-added">rule_text &lt;- paste0(</span>
+<span class="diff-added">  "&lt;expr&gt; ::= &lt;op&gt;
+",</span>
+<span class="diff-added">  "&lt;op&gt;   ::= &lt;op&gt; + &lt;op&gt; | &lt;op&gt; - &lt;op&gt; | &lt;op&gt; * &lt;op&gt; | ",</span>
+<span class="diff-added">  "protected_div(&lt;op&gt;, &lt;op&gt;) | protected_log_diff(&lt;op&gt;, &lt;op&gt;) | &lt;var&gt;
+",</span>
+<span class="diff-added">  "&lt;var&gt;  ::= ", string_vars</span>
+<span class="diff-added">)</span>
+<span class="diff-added">tf &lt;- tempfile()</span>
+<span class="diff-added">writeLines(rule_text, tf)</span>
+<span class="diff-added">bnf_grammar &lt;- CreateGrammar(tf)</span>
+<span class="diff-added">unlink(tf)</span></code></pre>
+            </div>
+
+            <div class="subsection-heading">Explorador de las 40 Variables Candidatas Alimentadas al GA</div>
+            <p>Utilice la barra de búsqueda para explorar los atributos bancarios expuestos a la evolución gramatical:</p>
+            <input type="text" id="filterInput" class="search-box" placeholder="🔍 Filtrar variables candidatas (ej: visa, master, trx, saldo, margen)...">
+
+            <div class="table-container">
+                <table id="candidatasTable">
+                    <thead>
+                        <tr>
+                            <th>Grupo Temático</th>
+                            <th>Variables Expuestas al GA</th>
+                            <th>Relevancia Financiera / Comportamental</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Sociodemográfico & Clientes</strong></td>
+                            <td><code>cliente_edad</code>, <code>cliente_antiguedad</code></td>
+                            <td>Ciclo de vida, permanencia institucional y riesgo etario.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Margen y Rentabilidad</strong></td>
+                            <td><code>mrentabilidad</code>, <code>mrentabilidad_annual</code>, <code>mcomisiones</code>, <code>mactivos_margen</code>, <code>mpasivos_margen</code></td>
+                            <td>Aporte neto económico directo del cliente a la entidad.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cuentas y Liquidez</strong></td>
+                            <td><code>mcuenta_corriente</code>, <code>mcaja_ahorro</code>, <code>mcuentas_saldo</code>, <code>cdescubierto_preacordado</code></td>
+                            <td>Disponibilidad de fondos, uso de giro al descubierto y saldos líquidos.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tarjetas Visa</strong></td>
+                            <td><code>ctarjeta_visa</code>, <code>ctarjeta_visa_transacciones</code>, <code>mtarjeta_visa_consumo</code>, <code>Visa_msaldototal</code>, <code>Visa_mlimitecompra</code>, <code>Visa_mconsumototal</code>, <code>Visa_cconsumos</code>, <code>Visa_mpagominimo</code>, <code>mttarjeta_visa_debitos_automaticos</code></td>
+                            <td>Grado de endeudamiento en tarjeta Visa, mora, límites disponibles y débitos automáticos.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tarjetas MasterCard</strong></td>
+                            <td><code>ctarjeta_master</code>, <code>ctarjeta_master_transacciones</code>, <code>mtarjeta_master_consumo</code>, <code>Master_msaldototal</code>, <code>Master_mlimitecompra</code>, <code>Master_mconsumototal</code>, <code>Master_cconsumos</code>, <code>Master_mpagominimo</code>, <code>Master_mfinanciacion_limite</code></td>
+                            <td>Endeudamiento y volumen de compra en el canal secundario MasterCard.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Haberes y Crédito</strong></td>
+                            <td><code>mpayroll</code>, <code>cpayroll_trx</code>, <code>cprestamos_personales</code>, <code>mprestamos_personales</code></td>
+                            <td>Fidelidad por acreditación de sueldo y compromisos de pago en cuotas.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Comisiones y Transferencias</strong></td>
+                            <td><code>ccomisiones_mantenimiento</code>, <code>mcomisiones_mantenimiento</code>, <code>ccomisiones_otras</code>, <code>mtransferencias_recibidas</code></td>
+                            <td>Fricción por cargos percibidos y flujos de entrada interbancarios.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Canales Operativos</strong></td>
+                            <td><code>ccallcenter_transacciones</code>, <code>chomebanking_transacciones</code>, <code>ctrx_quarter</code>, <code>cproductos</code>, <code>kmes</code></td>
+                            <td>Intensidad de uso de canales digitales, reclamos en call center y estacionalidad.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 6: Función Fitness Univariada -->
+        <section id="fitness-univariado">
+            <h2 class="section-heading">6. Función de Aptitud: Evaluación Rápida Univariada</h2>
+            <p>
+                Evaluar cientos de árboles completos de LightGBM por cada individuo del algoritmo genético sería prohibitivo en términos 
+                de cómputo. La implementación de la versión <strong>v2</strong> resuelve esto mediante una función de aptitud univariada 
+                ultra optimizada:
+            </p>
+
+            <div class="card">
+                <h4 style="color: var(--accent-primary); margin-bottom: 0.5rem;">Estructura de <code>fitness_gramEvol(expr)</code>:</h4>
+                <pre><code><span class="diff-added">fitness_gramEvol &lt;- function(expr) {</span>
+<span class="diff-added">  valores &lt;- tryCatch(eval(expr, envir = dataset), error = function(e) NULL)</span>
+<span class="diff-added">  if (is.null(valores)) return(1)  # costo máximo si la fórmula falla</span>
+
+<span class="diff-added">  valores_finitos &lt;- valores[is.finite(valores)]</span>
+<span class="diff-added">  if (length(valores_finitos) == 0 || length(unique(valores_finitos)) &lt;= 1) {</span>
+<span class="diff-added">    return(1)  # costo máximo si no tiene varianza</span>
+<span class="diff-added">  }</span>
+
+<span class="diff-added">  dtr  &lt;- lgb.Dataset(data = matrix(valores[idx_train], ncol = 1), label = y_train)</span>
+<span class="diff-added">  dval &lt;- lgb.Dataset(data = matrix(valores[idx_valid], ncol = 1), label = y_valid)</span>
+
+<span class="diff-added">  modelo &lt;- tryCatch({</span>
+<span class="diff-added">    lgb.train(</span>
+<span class="diff-added">      params = list(objective = "binary", metric = "auc",</span>
+<span class="diff-added">                    learning_rate = 0.1, num_threads = 1, verbosity = -1),</span>
+<span class="diff-added">      data = dtr, valids = list(valid = dval),</span>
+<span class="diff-added">      nrounds = 50, early_stopping_rounds = 10, verbose = -1</span>
+<span class="diff-added">    )</span>
+<span class="diff-added">  }, error = function(e) NULL)</span>
+
+<span class="diff-added">  if (is.null(modelo) || is.null(modelo$best_score) || is.na(modelo$best_score)) return(1)</span>
+
+<span class="diff-added">  1 - modelo$best_score   # Costo a minimizar: menor es mejor (AUC alto -&gt; costo bajo)</span>
+<span class="diff-added">}</span></code></pre>
+            </div>
+
+            <div class="grid-2">
+                <div class="stat-card emerald">
+                    <div class="stat-label">Split Temporal Local del GA</div>
+                    <div class="stat-value" style="font-size: 1.3rem;">27 Train / 3 Valid</div>
+                    <div class="stat-sub">Validación local: <code>202104</code>, <code>202105</code>, <code>202106</code>. Preserva <code>202107</code> intacto.</div>
+                </div>
+                <div class="stat-card amber">
+                    <div class="stat-label">Criterio de Parada Rápida</div>
+                    <div class="stat-value" style="font-size: 1.3rem;">10 Rounds Early Stop</div>
+                    <div class="stat-sub">Máximo 50 árboles univariados; corta si no hay ganancia en 10 rondas consecutivas.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 7: Diagnóstico Crítico Target Leakage -->
+        <section id="target-leakage">
+            <h2 class="section-heading" style="color: var(--accent-danger);">
+                7. ⚠️ Diagnóstico Crítico: Target Leakage y el "Falso AUC 0.999998"
+            </h2>
+            <p>
+                Al inspeccionar las salidas de ejecución reales guardadas en la Celda 79 de 
+                <code>620_WorkFlow_01_junior_grupoA-10_v2.ipynb</code>, se detecta un resultado estadísticamente imposible en condiciones de modelado reales:
+            </p>
+
+            <div class="card" style="border-color: rgba(248, 113, 113, 0.4);">
+                <pre style="color: var(--accent-danger); font-weight: 600;"><code>Wed Sep 09 00:25:53 2026  64, 64, 0.5 niter 293 AUC 0.999998083525509
+Wed Sep 09 00:26:21 2026  64, 64, 0.8 niter 205 AUC 0.999998281781491</code></pre>
+                <p style="font-size: 0.9rem; margin-bottom: 0;">
+                    Un <strong>AUC de 0.999998</strong> en un problema de churn bancario es un síntoma indiscutible de <strong>filtración de la variable objetivo (Target Leakage / Data Leakage)</strong>.
+                </p>
+            </div>
+
+            <div class="callout rose">
+                <div class="callout-title">🚨 Cadena de Causa Raíz Identificada Paso a Paso:</div>
+                <ol style="padding-left: 1.3rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7;">
+                    <li>
+                        <strong>Paso 1 (Creación prematura en Celda 46):</strong> Para calcular el fitness del GA antes de tiempo, el autor ejecutó:
+                        <code>dataset[, clase01 := ifelse(clase_ternaria %in% c("BAJA+1", "BAJA+2"), 1, 0)]</code>. La columna <code>clase01</code> quedó viva en el dataset.
+                    </li>
+                    <li>
+                        <strong>Paso 2 (Inyección inadvertida en FEhist - Celda 56):</strong> La celda de Feature Engineering Histórico define:
+                        <br><code>cols_lagueables &lt;- copy(setdiff(colnames(dataset), c("numero_de_cliente", "foto_mes", "clase_ternaria")))</code>.
+                        <br>En el notebook original (v01), <code>clase01</code> no existía aún en esta fase. En v2, <strong><code>clase01</code> sí existía y no estaba en la lista de exclusión</strong>.
+                    </li>
+                    <li>
+                        <strong>Paso 3 (Creación de deltas del target):</strong> <code>FEhist</code> generó automáticamente:
+                        <code>clase01_lag1</code>, <code>clase01_lag2</code>, <code>clase01_delta1</code> y <code>clase01_delta2</code>.
+                        <br>En particular, <strong><code>clase01_delta1 = clase01 - clase01_lag1</code></strong> contiene directamente la etiqueta del target actual.
+                    </li>
+                    <li>
+                        <strong>Paso 4 (Selección de features para el modelo - Celda 66):</strong>
+                        <br><code>campos_buenos &lt;- copy(setdiff(colnames(dataset), c("clase_ternaria", "clase01", "azar")))</code>.
+                        <br>Esta línea excluye <code>clase01</code>, <strong>¡pero dejó adentro a <code>clase01_delta1</code> y <code>clase01_delta2</code>!</strong>
+                    </li>
+                    <li>
+                        <strong>Paso 5 (Falso Aprendizaje Perfecto en Celda 79):</strong>
+                        Los árboles de decisión de LightGBM simplemente aprendieron la regla trivial sobre <code>clase01_delta1</code>, logrando predecir el target de validación <code>202107</code> casi al 100% de certeza.
+                    </li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <h4 style="color: var(--accent-danger); margin-bottom: 0.5rem;">Consecuencias Catastróficas en Kaggle / Producción:</h4>
+                <p style="font-size: 0.88rem;">
+                    En los datos del mes futuro (<code>202109</code>), la variable <code>clase_ternaria</code> no está informada (es el target que se busca predecir). 
+                    Por lo tanto, <code>clase01</code> es NA o 0, <code>clase01_delta1</code> pierde totalmente su contenido informativo, y el modelo entrenado 
+                    con este atajo predecirá probabilidades absurdas, resultando en un <strong>colapso total de ganancia económica y puntaje en Kaggle</strong>.
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 8: Efectos en Memoria -->
+        <section id="efectos-memoria">
+            <h2 class="section-heading">8. Multiplicación de Features: De 273 a 348 Columnas</h2>
+            <p>
+                Como resultado combinado de las variables generadas por el GA y la filtración de <code>clase01</code> hacia <code>FEhist</code>, 
+                la dimensionalidad del dataset se expandió drásticamente:
+            </p>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h4 style="color: var(--accent-primary); margin-bottom: 0.75rem;">Dimensión Teórica vs Real de Features</h4>
+                    <p style="font-size: 0.86rem; margin-bottom: 0.5rem;">
+                        <strong>En v01 (Base):</strong> 55 columnas originales + 2 de FE manual (<code>kmes</code>, <code>mpayroll_sobre_edad</code>) = 57 columnas base.
+                        <br>54 columnas lagueables &times; 4 (lag1, lag2, delta1, delta2) = 216 columnas generadas.
+                        <br><strong>Total en v01 = 273 columnas.</strong>
+                    </p>
+                    <p style="font-size: 0.86rem; margin-bottom: 0;">
+                        <strong>En v2 (Con GA):</strong> 55 originales + 2 manuales + <code>clase01</code> + <strong>14 variables <code>GA_Feature_*</code></strong> = 72 columnas base.
+                        <br>69 columnas lagueables &times; 4 = 276 columnas generadas.
+                        <br><strong>Total en v2 = 348 columnas (salida confirmada en Celda 58).</strong>
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h4 style="color: var(--accent-warning); margin-bottom: 0.75rem;">Discrepancia Interactiva: ¿Por qué 14 variables GA?</h4>
+                    <p style="font-size: 0.86rem;">
+                        El bucle de extracción del Top en la Celda 47 especifica <code>while (top_guardados &lt; 5 ...)</code> (es decir, Top 5). 
+                        Sin embargo, las salidas de las celdas 51 y 58 muestran columnas desde <code>GA_Feature_1</code> hasta <code>GA_Feature_14</code>.
+                    </p>
+                    <div class="callout amber" style="margin-top: 0.5rem; padding: 0.75rem 1rem;">
+                        <p style="font-size: 0.82rem; margin-bottom: 0;">
+                            <strong>Explicación:</strong> En una sesión interactiva previa de Jupyter/Colab, la celda se ejecutó con un <code>TOP_N</code> mayor (o se corrió de forma repetida sin reiniciar el kernel ni recargar el dataset limpio), acumulando 14 features sintéticas antes de pasar a la etapa de lags históricos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 9: Grid Search y Producción -->
+        <section id="grid-search">
+            <h2 class="section-heading">9. Estado de Ejecución del Grid Search y Producción</h2>
+            <p>
+                En el notebook v2 guardado, la ejecución del Grid Search (Celda 79) fue <strong>interrumpida prematuramente</strong> tras procesar 
+                únicamente 2 de las 50 combinaciones de hiperparámetros planificadas en <code>tb_nueva</code>:
+            </p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Iteración</th>
+                            <th>num_leaves</th>
+                            <th>min_data_in_leaf</th>
+                            <th>feature_fraction</th>
+                            <th>niter óptimo</th>
+                            <th>AUC Registrado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>64</td>
+                            <td>64</td>
+                            <td>0.5</td>
+                            <td>293</td>
+                            <td><code>0.99999808</code> (Corrompido por leakage)</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>64</td>
+                            <td>64</td>
+                            <td>0.8</td>
+                            <td>205</td>
+                            <td><code>0.99999828</code> (Corrompido por leakage)</td>
+                        </tr>
+                        <tr>
+                            <td>3 a 50</td>
+                            <td>128 a 512</td>
+                            <td>256 a 2048</td>
+                            <td>0.5 y 0.8</td>
+                            <td>-</td>
+                            <td><em>No ejecutadas (ejecución detenida)</em></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p style="font-size: 0.9rem; margin-top: 1rem;">
+                Como consecuencia de esta interrupción, las etapas de <strong>Final Training</strong> (entrenamiento del modelo definitivo en Celda 91), 
+                exportación del reporte de importancia de variables (<code>impo.txt</code> en Celda 93), scoring sobre <code>202109</code> (Celda 97) y 
+                generación de archivos para Kaggle (Celda 102) <strong>quedaron sin ejecutar en la versión guardada</strong>.
+            </p>
+        </section>
+
+        <!-- Section 10: Plan de Acción -->
+        <section id="plan-accion">
+            <h2 class="section-heading">10. Recomendaciones Técnicas y Plan de Acción para el Grupo A</h2>
+            <p>Para sanear completamente el workflow v2 y transformar el Algoritmo Genético en una ventaja competitiva real en Kaggle, se deben aplicar las siguientes medidas:</p>
+
+            <div class="grid-2">
+                <div class="card" style="border-color: rgba(52, 211, 153, 0.4);">
+                    <h4 style="color: var(--accent-success); margin-bottom: 0.6rem;">1. Corrección Inmediata del Target Leakage (Crítico)</h4>
+                    <p style="font-size: 0.86rem; margin-bottom: 0.5rem;">
+                        Eliminar <code>clase01</code> del dataset inmediatamente después de concluir el GA, permitiendo que se cree en su momento natural (Celda 65), o excluirla en <code>FEhist</code>:
+                    </p>
+                    <pre><code><span class="diff-added"># Solución en Celda 50 (Fin GA):</span>
+<span class="diff-added">dataset[, clase01 := NULL]</span>
+
+<span class="diff-added"># Y asegurar exclusión en Celda 56 (FEhist):</span>
+<span class="diff-added">cols_lagueables &lt;- copy(setdiff(colnames(dataset),</span>
+<span class="diff-added">  c("numero_de_cliente", "foto_mes", "clase_ternaria", "clase01")))</span></code></pre>
+                </div>
+
+                <div class="card">
+                    <h4 style="color: var(--accent-primary); margin-bottom: 0.6rem;">2. Control de Sobreajuste con Canaritos</h4>
+                    <p style="font-size: 0.86rem;">
+                        Las variables sintéticas generadas por evolución univariada pueden memorizar ruido histórico. 
+                        Se recomienda implementar la Celda 60 (actualmente vacía: <code># No se implementa la reduccion...</code>) 
+                        agregando canaritos asesinos (variables aleatorias uniformes) y podando aquellas fórmulas GA cuya importancia quede por debajo del canarito mediano.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h4 style="color: var(--accent-secondary); margin-bottom: 0.6rem;">3. Alineación del Fitness con el Negocio Financiero</h4>
+                    <p style="font-size: 0.86rem;">
+                        Actualmente el GA evalúa mediante AUC global. Sin embargo, la competencia premia la <strong>ganancia acumulada</strong> en los mejores 9.000 a 11.000 envíos.
+                        Adaptar la función de fitness para evaluar la ganancia acumulada en el punto de corte óptimo financiero ($p^* pprox 0.0256$) seleccionará interacciones mucho más rentables.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h4 style="color: var(--accent-warning); margin-bottom: 0.6rem;">4. Limpieza de Sesión y Corrida End-to-End</h4>
+                    <p style="font-size: 0.86rem;">
+                        Reiniciar el kernel de R (<code>Restart & Run All</code>) para limpiar las 14 variables acumuladas en memoria y garantizar que el dataset 
+                        genere exactamente el Top 5 deseado. Completar las 50 iteraciones del Grid Search y generar los submits definitivos en <code>exp/WF9199</code>.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Interactive Filter Script -->
+    <script>
+        const filterInput = document.getElementById('filterInput');
+        const candidatasTable = document.getElementById('candidatasTable');
+        const tableRows = candidatasTable.getElementsByTagName('tr');
+
+        filterInput.addEventListener('keyup', function() {
+            const query = filterInput.value.toLowerCase();
+            for (let i = 1; i < tableRows.length; i++) {
+                const text = tableRows[i].textContent.toLowerCase();
+                tableRows[i].style.display = text.includes(query) ? '' : 'none';
+            }
+        });
+    </script>
+</body>
+</html>
