@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementación del Algoritmo Genético - Workflow Analista Jr (Grupo A)</title>
+    <style>
+        :root {
+            --bg-base: #090d16;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #273549;
+            --bg-card-alt: #162032;
+            --border-color: #334155;
+            --border-focus: #38bdf8;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #38bdf8;
+            --accent-secondary: #818cf8;
+            --accent-purple: #c084fc;
+            --accent-success: #34d399;
+            --accent-warning: #fbbf24;
+            --accent-danger: #f87171;
+            --code-bg: #030712;
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            line-height: 1.65;
+            padding: 2.5rem 1.5rem;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .badge-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-primary { background: rgba(56, 189, 248, 0.15); color: var(--accent-primary); border: 1px solid rgba(56, 189, 248, 0.3); }
+        .badge-secondary { background: rgba(129, 140, 248, 0.15); color: var(--accent-secondary); border: 1px solid rgba(129, 140, 248, 0.3); }
+        .badge-success { background: rgba(52, 211, 153, 0.15); color: var(--accent-success); border: 1px solid rgba(52, 211, 153, 0.3); }
+        .badge-warning { background: rgba(251, 191, 36, 0.15); color: var(--accent-warning); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .badge-purple { background: rgba(192, 132, 252, 0.15); color: var(--accent-purple); border: 1px solid rgba(192, 132, 252, 0.3); }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        p, ul, ol {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-size: 0.975rem;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.4rem;
+        }
+
+        strong {
+            color: var(--text-primary);
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            font-family: var(--font-mono);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: #e2e8f0;
+        }
+
+        p code, li code {
+            background-color: rgba(255, 255, 255, 0.08);
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.25rem;
+            color: var(--accent-primary);
+            font-size: 0.85em;
+        }
+
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.925rem;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background-color: rgba(56, 189, 248, 0.1);
+            border-left-color: var(--accent-primary);
+            color: #bae6fd;
+        }
+
+        .alert-success {
+            background-color: rgba(52, 211, 153, 0.1);
+            border-left-color: var(--accent-success);
+            color: #a7f3d0;
+        }
+
+        .alert-warning {
+            background-color: rgba(251, 191, 36, 0.1);
+            border-left-color: var(--accent-warning);
+            color: #fde68a;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: var(--bg-card-alt);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            color: var(--bg-body);
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-right: 0.5rem;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="badge-group">
+            <span class="badge badge-primary">Evolución Gramatical</span>
+            <span class="badge badge-secondary">gramEvol</span>
+            <span class="badge badge-purple">LightGBM Univariado</span>
+            <span class="badge badge-success">Top 20 Features</span>
+            <span class="badge badge-warning">Monosemilla Reproducible</span>
+        </div>
+        <h1>Implementación del Algoritmo Genético</h1>
+        <p>Documentación técnica exhaustiva de la síntesis evolutiva de variables implementada en <code>620_WorkFlow_01_junior_exp10_grupoA.ipynb</code> (Experimento 10 - Grupo A).</p>
+    </header>
+
+    <!-- 1. RESUMEN Y OBJETIVO -->
+    <section>
+        <h2>1. Resumen Ejecutivo y Rol en el Workflow</h2>
+        <div class="card">
+            <p>En el pipeline de minería de datos bancarios (<strong>Workflow Analista Jr</strong>), la etapa de <strong>Feature Engineering Intra-mes (FE Intra-mes)</strong> crea nuevos atributos combinando variables registradas dentro del mismo período mensual, sin incorporar dependencias temporales (lags o diferencias históricas).</p>
+            <p>Frente al enfoque tradicional basado en fórmulas fijas dictadas por intuición de negocio humana, esta implementación incorpora <strong>Programación Genética Gramatical (Grammatical Evolution)</strong> para explorar sistemáticamente el espacio de hipótesis de combinaciones no lineales.</p>
+            
+            <div class="grid-3" style="margin-top: 1rem; margin-bottom: 0;">
+                <div class="metric-card">
+                    <div class="metric-value">150</div>
+                    <div class="metric-label">Individuos por Gen.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">50</div>
+                    <div class="metric-label">Generaciones</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Top 20</div>
+                    <div class="metric-label">Features Inyectadas</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. PARÁMETROS CONFIGURADOS -->
+    <section>
+        <h2>2. Configuración de Hiperparámetros (<code>PARAM$GA</code>)</h2>
+        <div class="card">
+            <p>Ubicado en la <strong>Celda 11</strong> del notebook, este bloque parametriza todas las dimensiones de la evolución:</p>
+            <pre><code>PARAM$GA &lt;- list(
+  popSize           = 150,    # Tamaño de la población de individuos en cada generación
+  iterations        = 50,     # Cantidad de generaciones evolutivas
+  top_features      = 20,     # Cantidad de mejores features no lineales a inyectar al dataset
+  max_terminales    = 60,     # Límite máximo de variables numéricas crudas a considerar
+  seqLen            = 250,    # Longitud máxima de codones del genoma
+  max.depth         = 10,     # Profundidad máxima del árbol sintáctico BNF
+  max_filas_fitness = 50000   # Muestra máxima para evaluación de fitness ultrarrápida
+)
+
+PARAM$semilla_primigenia &lt;- 102191 # Semilla única para garantizar reproducibilidad total</code></pre>
+            
+            <div class="alert alert-info">
+                <strong>Garantía Monosemilla:</strong> Todas las sub-muestras, selecciones de terminales y mutaciones estocásticas están regidas por <code>PARAM$semilla_primigenia</code>, garantizando que el árbol derivado y las columnas sintetizadas sean 100% determinísticas.
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. PASO A PASO TÉCNICO -->
+    <section>
+        <h2>3. Arquitectura y Mecánica Detallada Paso a Paso</h2>
+
+        <!-- PASO 1 -->
+        <div class="card">
+            <h3><span class="step-num">1</span> Selección y Filtrado de Variables Terminales</h3>
+            <p>El pool de terminales se genera dinámicamente a partir de las columnas del dataset bancario tras Catastrophe Analysis y Data Drifting, aplicando tres filtros de seguridad:</p>
+            <ul>
+                <li><strong>Exclusión de Metadatos y Target:</strong> Se descartan <code>numero_de_cliente</code>, <code>foto_mes</code>, <code>clase_ternaria</code>, <code>clase01</code>, <code>azar</code>, <code>fold_train</code> y <code>fold_final_train</code>.</li>
+                <li><strong>Filtro de Tipo Numérico:</strong> Se exige <code>is.numeric == TRUE</code>.</li>
+                <li><strong>Exclusión de Fechas:</strong> Se filtran patrones de fecha (prefijos o sufijos <code>fecha</code> o <code>_f</code>).</li>
+                <li><strong>Control de Cardinalidad:</strong> Si quedan más de 60 variables, se toma una muestra determinística de tamaño 60 con <code>set.seed(PARAM$semilla_primigenia)</code>.</li>
+            </ul>
+        </div>
+
+        <!-- PASO 2 -->
+        <div class="card">
+            <h3><span class="step-num">2</span> Split Local Temporal y Blindaje Anti-Data-Leakage</h3>
+            <p>Para evitar sobreajuste y contaminación de las fases posteriores de validación y test oficial:</p>
+            <ul>
+                <li><strong>Aislamiento Temporal:</strong> Se utilizan únicamente meses estrictamente anteriores a <code>202107</code>. La validación local del GA (<code>idx_val_GA</code>) toma los últimos 3 meses disponibles (ej. <code>202104</code>, <code>202105</code>, <code>202106</code>), y el entrenamiento (<code>idx_tr_GA</code>) toma los meses precedentes.</li>
+                <li><strong>Submuestreo Estratificado:</strong> Se restringe la evaluación a $50.000$ filas de entrenamiento y $25.000$ de validación, alcanzando una velocidad de cómputo de ~3-5 ms por individuo.</li>
+                <li><strong>Vectores Objetivo Aislados:</strong> <code>y_tr_GA</code> e <code>y_val_GA</code> se instancian en memoria RAM como vectores de enteros, <em>sin anexar columnas a <code>dataset</code></em>, impidiendo la filtración de target en el posterior paso de lags.</li>
+            </ul>
+        </div>
+
+        <!-- PASO 3 -->
+        <div class="card">
+            <h3><span class="step-num">3</span> Operadores Aritméticos Protegidos</h3>
+            <p>Para garantizar estabilidad matemática absoluta y prevenir que divisiones por cero o valores negativos generen <code>NaN</code> o <code>Inf</code>:</p>
+            <pre><code>protected_div &lt;- function(x, y) {
+  res &lt;- x / (y + 1e-5)
+  res[is.na(res) | is.infinite(res)] &lt;- 0
+  res
+}
+
+protected_log_diff &lt;- function(x, y) {
+  res &lt;- log(abs(x - y) + 1)
+  res[is.na(res) | is.infinite(res)] &lt;- 0
+  res
+}
+
+es_expresion_trivial &lt;- function(f) {
+  !grepl("[+*/-]|protected_", f)
+}</code></pre>
+            <p>La función <code>es_expresion_trivial()</code> detecta si el genoma degeneró en una variable simple sin operaciones (ej: <code>ctrx_quarter</code>), descartándola para reservar los cupos a combinaciones no lineales reales.</p>
+        </div>
+
+        <!-- PASO 4 -->
+        <div class="card">
+            <h3><span class="step-num">4</span> Gramática Formal BNF (Backus-Naur Form)</h3>
+            <p>Se construye un archivo temporal que define la sintaxis formal del lenguaje algebraico permitido:</p>
+            <pre><code>&lt;expr&gt; ::= &lt;op&gt;
+&lt;op&gt;   ::= &lt;op&gt; + &lt;op&gt; | &lt;op&gt; - &lt;op&gt; | &lt;op&gt; * &lt;op&gt; | 
+           protected_div(&lt;op&gt;, &lt;op&gt;) | protected_log_diff(&lt;op&gt;, &lt;op&gt;) | &lt;var&gt;
+&lt;var&gt;  ::= ctrx_quarter | mcuentas_saldo | Visa_msaldototal | ...</code></pre>
+            <p>Los codones enteros del genoma mapean cada regla de derivación determinando qué operador o terminal se expande recursivamente hasta un árbol terminal de profundidad máxima 10.</p>
+        </div>
+
+        <!-- PASO 5 -->
+        <div class="card">
+            <h3><span class="step-num">5</span> Función de Aptitud (Fitness) con LightGBM Univariado Real</h3>
+            <p>El valor de aptitud no es una correlación lineal simple ni una prueba de chi-cuadrado; se mide la discriminabilidad univariada real entrenando un modelo LightGBM:</p>
+            <pre><code>fitness_gramEvol &lt;- function(expr) {
+  valores &lt;- tryCatch(eval(expr, envir = dataset), error = function(e) NULL)
+  if (is.null(valores)) return(1)
+
+  val_tr &lt;- valores[idx_tr_GA]
+  val_finitos &lt;- val_tr[is.finite(val_tr)]
+  if (length(val_finitos) == 0 || length(unique(val_finitos)) &lt;= 1) return(1)
+
+  dtr_ga  &lt;- lgb.Dataset(data = matrix(val_tr, ncol = 1), label = y_tr_GA, free_raw_data = TRUE)
+  dval_ga &lt;- lgb.Dataset(data = matrix(valores[idx_val_GA], ncol = 1), label = y_val_GA, free_raw_data = TRUE)
+
+  modelo_ga &lt;- tryCatch({
+    lgb.train(
+      params = list(objective = "binary", metric = "auc",
+                    learning_rate = 0.1, num_threads = 1, verbosity = -1),
+      data = dtr_ga, valids = list(valid = dval_ga),
+      nrounds = 50, early_stopping_rounds = 10, verbose = -1
+    )
+  }, error = function(e) NULL)
+
+  if (is.null(modelo_ga) || is.null(modelo_ga$best_score) || is.na(modelo_ga$best_score)) return(1)
+
+  1 - modelo_ga$best_score # Costo = 1 - AUC
+}</code></pre>
+            <p>La minimización del costo equivale a maximizar el AUC sobre los meses de validación local.</p>
+        </div>
+
+        <!-- PASO 6 -->
+        <div class="card">
+            <h3><span class="step-num">6</span> Ciclo Evolutivo y Presión Selectiva Calibrada</h3>
+            <p>El motor evolutivo <code>GrammaticalEvolution()</code> ejecuta las 50 generaciones aplicando una configuración robusta:</p>
+            <ul>
+                <li><strong>Elitismo al 50% (75 individuos):</strong> Conserva las mejores soluciones halladas impidiendo que mutaciones destructivas degraden el frente óptimo.</li>
+                <li><strong>Tasa de Mutación al 15%:</strong> Estimula la exploración en el espacio combinatorio para escapar de mínimos locales.</li>
+                <li><strong>Parada Temprana por Costo:</strong> <code>terminationCost = 0.10</code> (se detiene si se descubre una feature univariada con AUC $\ge 0.90$).</li>
+            </ul>
+        </div>
+
+        <!-- PASO 7 -->
+        <div class="card">
+            <h3><span class="step-num">7</span> Decodificación Paralela y Extracción del Top 20</h3>
+            <p>Finalizado el bucle generacional, se analiza la población completa utilizando multiprocesamiento (<code>mclapply</code> en Linux con <code>detectCores() - 1</code>):</p>
+            <ol>
+                <li>Se decodifica el fenotipo de cada genoma mediante <code>GrammarMap()</code>.</li>
+                <li>Se ordenan los individuos descendentemente por AUC univariado.</li>
+                <li>Se descartan fórmulas con $\text{AUC} \le 0.50$ (sin poder discriminante).</li>
+                <li>Se descartan expresiones triviales y duplicados algebraicos.</li>
+                <li>Se evalúan y materializan en el dataset las <strong>20 mejores columnas únicas</strong> con nomenclatura estándar:
+                    <br/><code>dataset[, GA_Feature_1 := eval(formula_1)]</code> ... <code>dataset[, GA_Feature_20 := eval(formula_20)]</code>
+                </li>
+            </ol>
+        </div>
+
+        <!-- PASO 8 -->
+        <div class="card">
+            <h3><span class="step-num">8</span> Trazabilidad Formal y Blindaje Posterior</h3>
+            <p>Se genera el archivo formal de auditoría y trazabilidad en la carpeta del experimento:</p>
+            <pre><code>GA_trazabilidad_formulas_s102191.csv</code></pre>
+            <p>Este archivo documenta para cada una de las 20 variables sintéticas: nombre de la columna generada, AUC univariado alcanzado y la expresión matemática completa en lenguaje R.</p>
+            <div class="alert alert-success">
+                <strong>Blindaje Post-GA:</strong> Al finalizar la celda, se ejecuta <code>if ("clase01" %in% colnames(dataset)) dataset[, clase01 := NULL]</code>, garantizando que el posterior paso de cálculo de variables históricas (<code>FEhist</code>) no encuentre la clase en el dataset.
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. MATRIZ TÉCNICA -->
+    <section>
+        <h2>4. Tabla Resumen de Componentes Técnicos</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Módulo</th>
+                        <th>Detalle de Implementación</th>
+                        <th>Impacto en el Pipeline</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Motor Genético</strong></td>
+                        <td><code>gramEvol</code> con doble fallback HTTPS</td>
+                        <td>Instalación desatendida y sin fallos en servidores cloud o locales</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Espacio Sintáctico</strong></td>
+                        <td>Gramática formal BNF con 5 operadores</td>
+                        <td>Permite generar ratios, sumas, restas y diferencias logarítmicas complejas</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Métrica de Aptitud</strong></td>
+                        <td>AUC univariado con LightGBM (1 árbol por iteración)</td>
+                        <td>Guía la evolución hacia patrones no lineales reales con alta correlación al target</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Control Dimensional</strong></td>
+                        <td>Exactamente 20 variables no triviales (Top 20)</td>
+                        <td>Enriquece la capacidad predictiva sin sobrecargar el dataset ni generar multicolinealidad trivial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Trazabilidad</strong></td>
+                        <td>CSV con variables, fórmulas y AUCs</td>
+                        <td>Total reproducibilidad e interpretabilidad para auditoría de negocio</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ecosistema Monosemilla</strong></td>
+                        <td>1 sola semilla primigenia (102191)</td>
+                        <td>Alineación perfecta con la filosofía canónica del workflow z620 sin multi-semilla</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 5. SINERGIA CON FE HISTÓRICO -->
+    <section>
+        <h2>5. Sinergia con las Etapas Posteriores</h2>
+        <div class="card">
+            <p>La inyección de estas 20 features en el dataset no concluye en la etapa intra-mes. Al ingresar en la etapa <strong>9.3.1.5 (FE Histórico)</strong>:</p>
+            <ul>
+                <li>Cada una de las 20 <code>GA_Feature_X</code> es reconocida automáticamente por <code>cols_lagueables</code>.</li>
+                <li>Se calculan sus versiones de retardo temporal: <code>lag1</code>, <code>lag2</code>, <code>delta1</code> y <code>delta2</code>.</li>
+                <li>De esta manera, el modelo final LightGBM tiene a su disposición no solo las interacciones contemporáneas descubiertas por la evolución, sino también la <strong>aceleración y tendencia temporal</strong> de las mismas a lo largo de los meses.</li>
+            </ul>
+        </div>
+    </section>
+
+    <footer>
+        <p>Laboratorio de Minería de Datos en Economía y Finanzas 2026 &bull; Grupo A &bull; Experimento 10</p>
+    </footer>
+
+</body>
+</html>
